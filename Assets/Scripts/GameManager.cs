@@ -20,7 +20,7 @@ public class GameManager : MonoBehaviour
     void InitializeDeck()
     {
         string[] suits = { "acorn", "heart", "leaf", "bell" };
-        string[] values = { "Ace", "10", "Queen", "upper", "under", "9", "8", "7" };
+        string[] values = { "Ace", "10", "queen", "upper", "under", "9", "8", "7" };
 
         foreach (string suit in suits)
         {
@@ -38,26 +38,30 @@ public class GameManager : MonoBehaviour
 
     void DealCards()
     {
-        AssignCardsToPlayer(player1Area);
-        AssignCardsToPlayer(player2Area);
-    }
-
-    void AssignCardsToPlayer(Transform playerArea)
-    {
         for (int i = 0; i < 4; i++)
         {
-            if (deck.Count > 0)
+            if (deck.Count > 1)
             {
-                Card card = deck[0]; // pick the top card
-                deck.RemoveAt(0); // remove from the deck
+                // assign unique cards for the player 1
+                Card card1 = deck[0];
+                deck.RemoveAt(0);
+                InstantiateCard(card1, player1Area);
 
-                GameObject newCard = Instantiate(cardPrefab, playerArea);
-                newCard.transform.SetParent(playerArea, false);
-
-                CardUI cardUI = newCard.GetComponent<CardUI>();
-                cardUI.SetCard(GetCardSprite(card), card.suit, card.value);
+                // assign unique cards for the player 2
+                Card card2 = deck[0];
+                deck.RemoveAt(0);
+                InstantiateCard(card2, player2Area);
             }
         }
+    }
+
+    void InstantiateCard(Card card, Transform playerArea)
+    {
+        GameObject newCard = Instantiate(cardPrefab, playerArea);
+        newCard.transform.SetParent(playerArea, false);
+
+        CardUI cardUI = newCard.GetComponent<CardUI>();
+        cardUI.SetCard(GetCardSprite(card), card.suit, card.value);
     }
 
     Sprite GetCardSprite(Card card)
