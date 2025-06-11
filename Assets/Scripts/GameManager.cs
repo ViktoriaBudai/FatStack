@@ -10,11 +10,19 @@ public class GameManager : MonoBehaviour
     public GameObject cardPrefab; // card UI prefab
     public Sprite[] cardSprites; // array of card images
 
+    public static GameManager Instance;
+    public RectTransform middleArea;
+
     private void Start()
     {
         InitializeDeck();
         ShuffleDeck();
         DealCards();
+    }
+
+    void Awake()
+    {
+        Instance = this;
     }
 
     void InitializeDeck()
