@@ -22,14 +22,24 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
 
     public void OnDrag(PointerEventData eventData)
     {
-        rectTransform.position = Mouse.current.position.ReadValue(); // move the card with the mouse
+        //rectTransform.position = Mouse.current.position.ReadValue(); // move the card with the mouse
+
+        Vector2 mousePos = Mouse.current.position.ReadValue();
+        Vector3 worldPos;
+
+        //Camera camera = eventData.pressEventCamera != null ? eventData.pressEventCamera : Camera.main;
+        // converts a screen position, mouse position into a word position relative to a UI element ( a RectTransform), so objects follow the cursor naturally
+        RectTransformUtility.ScreenPointToWorldPointInRectangle(rectTransform, mousePos, eventData.pressEventCamera, out worldPos);
+
+        rectTransform.position = worldPos; // move UI element to world position 
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
         // first check the card is dropped in the middle area
+        Vector2 mousePos = Mouse.current.position.ReadValue();
 
-        if (RectTransformUtility.RectangleContainsScreenPoint(GameManager.Instance.middleArea, Input.mousePosition))
+        if (RectTransformUtility.RectangleContainsScreenPoint(GameManager.Instance.middleArea, mousePos))
         {
             rectTransform.position = GameManager.Instance.middleArea.position; // move to the middle
         }

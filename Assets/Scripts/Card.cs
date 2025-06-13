@@ -14,5 +14,12 @@ public class Card
         this.suit = suit;
         this.value = value;
         this.isQueen = isQueen;
+        this.points = GetCardPoints();
+    }
+
+    private int GetCardPoints() 
+    {
+        if (value == "ace" || value == "10") return 10;
+        return 0;
     }
 }
