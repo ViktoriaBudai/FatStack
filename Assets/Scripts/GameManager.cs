@@ -24,10 +24,7 @@ public class GameManager : MonoBehaviour
 
     private void Start()
     {
-        Instance = this;
-        playerScores[player1Area] = 0;
-        playerScores[player2Area] = 0;
-
+       
         InitializeDeck();
         ShuffleDeck();
         StartCoroutine(DealStartingCards());
@@ -84,36 +81,9 @@ public class GameManager : MonoBehaviour
             Debug.Log("AI Player2 place a card! Drawing automayically.");
             DrawCard(player2Area);
         }
-        else
-        {
-            StartCoroutine(ForcePlayer1ToDraw());
-        }
         StartCoroutine(NextTurn());
     }
-    IEnumerator AI_PlayTurn()
-    {
-        yield return new WaitForSeconds(1f);
-
-        GameObject aiCard = player2Area.GetChild(Random.Range(0, player2Area.childCount)).gameObject;
-        PlayCard(aiCard);
-    }
-
-
-
-    IEnumerator AI_DrawNextCard()
-    {
-        yield return new WaitForSeconds(0.5f);
-        if (player2Area.childCount < 4)
-        {
-            DrawCard(player2Area);
-        }
-    }
-
-    IEnumerator ForcePlayer1ToDraw()
-    {
-        yield return new WaitForSeconds(0.5f);
-        DrawNextCard();
-    }
+    
 
     public void DrawNextCard()
     {
@@ -198,10 +168,7 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         isPlayer1Turn = !isPlayer1Turn; // alternate turns
 
-        if (!isPlayer1Turn)
-        {
-            StartCoroutine(AI_PlayTurn());
-        }
+        
     }
 
 
