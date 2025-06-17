@@ -14,6 +14,12 @@ public class CardHover : MonoBehaviour, IPointerEnterHandler, IPointerExitHandle
 
     public void OnPointerEnter(PointerEventData eventData)
     {
+        //new
+        // **Prevent interaction if it's not this player's turn**
+        if (transform.parent != GameManager.Instance.GetCurrentPlayerArea())
+        {
+            return; // Ignore hover if it's not the current player's turn
+        }
         // scale up the cards a little and change the border color
         transform.localScale = originalScale * 1.5f;
         spriteRenderer.color = Color.yellow;

@@ -36,6 +36,7 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
 
     public void OnEndDrag(PointerEventData eventData)
     {
+        //old version
         // first check the card is dropped in the middle area
         Vector2 mousePos = Mouse.current.position.ReadValue();
 
@@ -49,8 +50,35 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         }
 
         canvasGroup.blocksRaycasts = true; // restore raycast
+
+        //new version
+        // Prevent dragging if it's not the correct player's turn
+        /*if (GameManager.Instance.GetCurrentPlayerArea() != transform.parent)
+        {
+            Debug.LogWarning("You cannot place a card right now. Wait for your turn.");
+            //rectTransform.position = originalPosition; // Reset position
+            return;
+        }
+
+        // Ensure card is dropped in the correct area
+        Vector2 mousePos = Mouse.current.position.ReadValue();
+
+        if (RectTransformUtility.RectangleContainsScreenPoint(GameManager.Instance.middleArea, mousePos))
+        {
+            rectTransform.SetParent(GameManager.Instance.middleArea, false);
+            // new
+            //rectTransform.anchoredPosition = GameManager.Instance.middleArea.anchoredPosition;
+            // Make sure new cards always appear on top
+            rectTransform.SetSiblingIndex(GameManager.Instance.middleArea.childCount - 1);
+        
+            GameManager.Instance.PlayCard(gameObject); // Register the card in GameManager
+        }
+        else
+        {
+            rectTransform.position = originalPosition; // Return to the original place
+        }
+
+        canvasGroup.blocksRaycasts = true; // Restore raycast*/
     }
-
-
 
 }
