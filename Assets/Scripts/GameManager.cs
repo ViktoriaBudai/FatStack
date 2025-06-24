@@ -25,6 +25,7 @@ public class GameManager : MonoBehaviour
     private GameObject lastPlacedCard;
     private int currentPlayer = 0; // player1[0], player2[1]
     private List<Card> playedCards = new List<Card>(); // stores played cards
+    private List<GameObject> middleCards = new List<GameObject>(); // what's visible in the middle area
     public List<GameObject> player1Cards = new List<GameObject>(); // Cards in Player 1 area
     public List<GameObject> player2Cards = new List<GameObject>(); // Cards in Player 2 area
     private Dictionary<Transform, int> playerScores = new Dictionary<Transform, int>();
@@ -116,6 +117,15 @@ public class GameManager : MonoBehaviour
             player2Cards.Remove(card);
         }
 
+        // new part in the script 06.24.
+
+        // Add to visual middle list (if you're using one)
+        middleCards.Add(card);
+        // Add to data history list
+        CardUI cardUI = card.GetComponent<CardUI>();
+        playedCards.Add(new Card(cardUI.suit, cardUI.value, false));
+        // new part end
+
         // disable actions until the next turn starts
         canPlay = false;
 
@@ -123,7 +133,7 @@ public class GameManager : MonoBehaviour
         card.transform.SetAsLastSibling(); // Ensures top visual layer, new version 06.24.
         card.GetComponent<RectTransform>().anchoredPosition = Vector2.zero; // Optional: center it, new code 06.24
 
-        // old 06.24. midifyed
+        // old 06.24. midified
         //card.transform.SetSiblingIndex(middleArea.childCount - 1); // ensure that the card appears on the top
         //card.transform.position = new Vector3(card.transform.position.x, card.transform.position.y, -middleArea.childCount);
 
@@ -135,7 +145,7 @@ public class GameManager : MonoBehaviour
         //old
         //card.transform.SetAsLastSibling();
 
-        lastPlacedCard = card; // Track last played card
+        lastPlacedCard = card; // track last played card
 
         // old version
         /*card.transform.SetParent(middleArea, false);
@@ -143,11 +153,9 @@ public class GameManager : MonoBehaviour
         cardRect.anchoredPosition = middleArea.anchoredPosition;*/
 
 
-        CardUI cardUI = card.GetComponent<CardUI>();
-        playedCards.Add(new Card(cardUI.suit, cardUI.value, false));
+        //CardUI cardUI = card.GetComponent<CardUI>(); // this belongs to the old version, midified 06.24.
+        //playedCards.Add(new Card(cardUI.suit, cardUI.value, false)); // belongs to the old version, modified 06.24.
         
-
-        //Debug.Log($"Player {currentPlayer + 1} played {card.name}");
         StartCoroutine(NextTurn());
     }
     

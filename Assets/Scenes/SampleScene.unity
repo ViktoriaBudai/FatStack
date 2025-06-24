@@ -851,7 +851,7 @@ GameObject:
   - component: {fileID: 1365406020}
   - component: {fileID: 1365406019}
   m_Layer: 5
-  m_Name: Text (TMP)
+  m_Name: player2Score
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1180,6 +1180,8 @@ MonoBehaviour:
   middleArea: {fileID: 315329956}
   player1WinPile: {fileID: 0}
   player2WinPile: {fileID: 0}
+  player1Cards: []
+  player2Cards: []
 --- !u!4 &1484786278
 Transform:
   m_ObjectHideFlags: 0
