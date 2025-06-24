@@ -36,9 +36,9 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        //old version
+        //old version, try someting new 06.24.
         // first check the card is dropped in the middle area
-        Vector2 mousePos = Mouse.current.position.ReadValue();
+        /*Vector2 mousePos = Mouse.current.position.ReadValue();
 
         if (RectTransformUtility.RectangleContainsScreenPoint(GameManager.Instance.middleArea, mousePos))
         {
@@ -49,36 +49,37 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
             rectTransform.position = originalPosition; // return to the original place
         }
 
-        canvasGroup.blocksRaycasts = true; // restore raycast
+        canvasGroup.blocksRaycasts = true; // restore raycast*/
 
-        //new version
-        // Prevent dragging if it's not the correct player's turn
-        /*if (GameManager.Instance.GetCurrentPlayerArea() != transform.parent)
-        {
-            Debug.LogWarning("You cannot place a card right now. Wait for your turn.");
-            //rectTransform.position = originalPosition; // Reset position
-            return;
-        }
+        //trying out new version 06.24.
 
-        // Ensure card is dropped in the correct area
         Vector2 mousePos = Mouse.current.position.ReadValue();
 
         if (RectTransformUtility.RectangleContainsScreenPoint(GameManager.Instance.middleArea, mousePos))
         {
-            rectTransform.SetParent(GameManager.Instance.middleArea, false);
-            // new
-            //rectTransform.anchoredPosition = GameManager.Instance.middleArea.anchoredPosition;
-            // Make sure new cards always appear on top
-            rectTransform.SetSiblingIndex(GameManager.Instance.middleArea.childCount - 1);
-        
-            GameManager.Instance.PlayCard(gameObject); // Register the card in GameManager
+            transform.SetParent(GameManager.Instance.middleArea, false);
+            transform.SetAsLastSibling();
+
+            RectTransform rt = GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero;
+
+            // this is works well, but new test 06.24
+            rt.localScale = Vector3.one; // keeps the card from shrinking
+            rt.sizeDelta = new Vector2(260f, 560f); // lock to same size as in hand, for some reson I need bigger scale for the played cards, so I made this manually
+
+   
+
+            GameManager.Instance.PlayCard(gameObject);
         }
         else
         {
-            rectTransform.position = originalPosition; // Return to the original place
+            rectTransform.position = originalPosition;
         }
 
-        canvasGroup.blocksRaycasts = true; // Restore raycast*/
+        canvasGroup.blocksRaycasts = true;
     }
 
 }

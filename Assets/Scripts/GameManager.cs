@@ -30,6 +30,7 @@ public class GameManager : MonoBehaviour
     private Dictionary<Transform, int> playerScores = new Dictionary<Transform, int>();
     private bool canPlay = true; // new flag to enforce turns
 
+
     void Awake()
     {
         if (Instance == null)
@@ -61,7 +62,18 @@ public class GameManager : MonoBehaviour
 
     void ShuffleDeck()
     {
-        deck = deck.OrderBy(card => Random.value).ToList();
+        // old version
+        //deck = deck.OrderBy(card => Random.value).ToList();
+
+        //new version 06.24.
+        for (int i = deck.Count - 1; i > 0; i--)
+        {
+            int rand = Random.Range(0, i + 1);
+            Card temp = deck[i];
+            deck[i] = deck[rand];
+            deck[rand] = temp;
+        }
+
     }
 
     IEnumerator DealStartingCards()
@@ -108,9 +120,18 @@ public class GameManager : MonoBehaviour
         canPlay = false;
 
         card.transform.SetParent(middleArea, false);
+        card.transform.SetAsLastSibling(); // Ensures top visual layer, new version 06.24.
+        card.GetComponent<RectTransform>().anchoredPosition = Vector2.zero; // Optional: center it, new code 06.24
 
-        card.transform.SetSiblingIndex(middleArea.childCount - 1); // ensure that the card appears on the top
-        card.transform.position = new Vector3(card.transform.position.x, card.transform.position.y, -middleArea.childCount);
+        // old 06.24. midifyed
+        //card.transform.SetSiblingIndex(middleArea.childCount - 1); // ensure that the card appears on the top
+        //card.transform.position = new Vector3(card.transform.position.x, card.transform.position.y, -middleArea.childCount);
+
+        // new set up 06.24, for the fade-in effect
+        CanvasGroup cg = card.AddComponent<CanvasGroup>();
+        cg.alpha = 0f;
+        LeanTween.alphaCanvas(cg, 1f, 0.5f);
+
         //old
         //card.transform.SetAsLastSibling();
 
