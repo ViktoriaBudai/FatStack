@@ -129,10 +129,10 @@ TextureImporter:
       name: bell_ace_0
       rect:
         serializedVersion: 2
-        x: 27
-        y: 27
-        width: 398
-        height: 606
+        x: 0
+        y: 0
+        width: 605
+        height: 923
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}

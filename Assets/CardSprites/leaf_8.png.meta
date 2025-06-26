@@ -129,10 +129,10 @@ TextureImporter:
       name: leaf_8_0
       rect:
         serializedVersion: 2
-        x: 29
-        y: 25
-        width: 418
-        height: 636
+        x: 0
+        y: 0
+        width: 605
+        height: 923
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}

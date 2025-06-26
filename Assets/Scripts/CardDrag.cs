@@ -68,7 +68,7 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
 
             // this is works well, but new test 06.24
             rt.localScale = Vector3.one; // keeps the card from shrinking
-            rt.sizeDelta = new Vector2(260f, 560f); // lock to same size as in hand, for some reson I need bigger scale for the played cards, so I made this manually
+            rt.sizeDelta = new Vector2(240f, 560f); // lock to same size as in hand, for some reson I need bigger scale for the played cards, so I made this manually
 
    
 

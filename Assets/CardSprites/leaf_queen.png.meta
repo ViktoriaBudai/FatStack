@@ -129,10 +129,10 @@ TextureImporter:
       name: leaf_queen_0
       rect:
         serializedVersion: 2
-        x: 48
-        y: 25
-        width: 431
-        height: 656
+        x: 0
+        y: 0
+        width: 605
+        height: 923
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
