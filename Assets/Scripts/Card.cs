@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Card
+public class Card 
 {
     public string suit; // e.g. Heart, Leaf, ...
     public string value; // Ten, Nine, Eight, Seven, Upper, Lower ...

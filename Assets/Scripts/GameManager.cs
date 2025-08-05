@@ -3,6 +3,7 @@ using UnityEngine;
 using System.Linq;
 using System.Collections;
 using Unity.VisualScripting;
+using TMPro;
 
 public class GameManager : MonoBehaviour 
 {
@@ -30,6 +31,8 @@ public class GameManager : MonoBehaviour
     public List<GameObject> player2Cards = new List<GameObject>(); // Cards in Player 2 area
     private Dictionary<Transform, int> playerScores = new Dictionary<Transform, int>();
     private bool canPlay = true; // new flag to enforce turns
+
+    public TextMeshProUGUI cardPlayedInfoText;
 
 
     void Awake()
@@ -93,17 +96,18 @@ public class GameManager : MonoBehaviour
 
     public void PlayCard(GameObject card)
     {
+        
         // new version
         if (!canPlay)
         {
             Debug.LogWarning($"It's not Player {currentPlayer + 1}'s turn! You cannot play right now.");
-            return;
+           
         }
         // ensure that only the current player can place a card
         if (card.transform.parent != GetCurrentPlayerArea())
         {
             Debug.LogWarning($"It's Player {currentPlayer + 1}'s turn! You cannot play right now.");
-            return;
+            
         }
 
         // this is a test, if it is not working remove this
@@ -119,7 +123,7 @@ public class GameManager : MonoBehaviour
 
         // new part in the script 06.24.
 
-        // Add to visual middle list (if you're using one)
+        // Add to visual middle list
         middleCards.Add(card);
         // Add to data history list
         CardUI cardUI = card.GetComponent<CardUI>();
@@ -130,6 +134,12 @@ public class GameManager : MonoBehaviour
         canPlay = false;
 
         card.transform.SetParent(middleArea, false);
+
+        // this is a new code 07.15.
+        string playerName = currentPlayer == 0 ? "Player 1" : "Player 2";
+        cardPlayedInfoText.text = $"{playerName} placed a card in the middle.";
+        cardPlayedInfoText.color = currentPlayer == 0 ? Color.blue : Color.red;
+        // new code ends hre 07.15.
         card.transform.SetAsLastSibling(); // Ensures top visual layer, new version 06.24.
         card.GetComponent<RectTransform>().anchoredPosition = Vector2.zero; // Optional: center it, new code 06.24
 
@@ -139,8 +149,8 @@ public class GameManager : MonoBehaviour
 
         // new set up 06.24, for the fade-in effect
         CanvasGroup cg = card.AddComponent<CanvasGroup>();
-        cg.alpha = 0f;
-        LeanTween.alphaCanvas(cg, 1f, 0.5f);
+        //cg.alpha = 0f;
+        //LeanTween.alphaCanvas(cg, 1f, 0.5f);
 
         //old
         //card.transform.SetAsLastSibling();
@@ -156,6 +166,8 @@ public class GameManager : MonoBehaviour
         //CardUI cardUI = card.GetComponent<CardUI>(); // this belongs to the old version, midified 06.24.
         //playedCards.Add(new Card(cardUI.suit, cardUI.value, false)); // belongs to the old version, modified 06.24.
         
+        
+
         StartCoroutine(NextTurn());
     }
     
@@ -199,6 +211,14 @@ public class GameManager : MonoBehaviour
             return;
         }
 
+        //new 08.07
+        // assign player ownership to the card
+        CardOwner owner = cardObj.GetComponent<CardOwner>();
+        if (owner != null)
+        {
+            owner.ownerPlayerId = (playerArea == player1Area) ? 0 : 1;
+        }
+
         // new part if it is not working, strat from here to debug, something is not okay with that still
         // Assign the card to the correct player's list
         if (playerArea == player1Area)
@@ -210,11 +230,12 @@ public class GameManager : MonoBehaviour
         {
             player2Cards.Add(cardObj);
         }
-            
 
+        
         LeanTween.move(cardObj, playerArea.position, 1f)
             .setEase(LeanTweenType.easeOutQuad)
             .setOnComplete(() => cardObj.transform.SetParent(playerArea, false));
+
     }
 
 

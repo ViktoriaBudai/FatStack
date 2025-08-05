@@ -57,8 +57,9 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
 
         if (RectTransformUtility.RectangleContainsScreenPoint(GameManager.Instance.middleArea, mousePos))
         {
+            // edit, remove the next line for test case 09.07
             transform.SetParent(GameManager.Instance.middleArea, false);
-            transform.SetAsLastSibling();
+           
 
             RectTransform rt = GetComponent<RectTransform>();
             rt.anchorMin = new Vector2(0.5f, 0.5f);
@@ -71,7 +72,6 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
             rt.sizeDelta = new Vector2(240f, 560f); // lock to same size as in hand, for some reson I need bigger scale for the played cards, so I made this manually
 
    
-
             GameManager.Instance.PlayCard(gameObject);
         }
         else
