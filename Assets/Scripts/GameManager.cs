@@ -42,14 +42,42 @@ public class GameManager : MonoBehaviour
         else
             Destroy(gameObject);
     }
-    private void Start()
+
+    // new code 05.08
+
+    private IEnumerator Start()
+    {
+        InitializeDeck();
+        ShuffleDeck();
+
+        // deal the opening 4 cards/ player
+        yield return StartCoroutine(DealStartingCards());
+
+        // now random pick who will starts
+        currentPlayer = Random.Range(0, 2); // 0 or 1
+        canPlay = true;
+
+        // update UI, players know who goes first
+        string starterName = currentPlayer == 0 ? "Player 1" : "Player 2";
+        Color starterColor = currentPlayer == 0 ? Color.green : Color.red;
+
+        cardPlayedInfoText.text = $"{starterName} starts the game!";
+        cardPlayedInfoText.color = starterColor;
+
+        Debug.Log($"{starterName} begins.");
+
+    }
+   
+
+    // old Start() method, for test reson comented out 05.08.
+    /*private void Start()
     {
         InitializeDeck();
         ShuffleDeck();
         StartCoroutine(DealStartingCards());
     }
+    */
 
-   
     void InitializeDeck()
     {
         string[] suits = { "acorn", "heart", "leaf", "bell" };
@@ -96,9 +124,24 @@ public class GameManager : MonoBehaviour
 
     public void PlayCard(GameObject card)
     {
-        
-        // new version
+        // new version modifyed 05.08.
+        // must be your turn
         if (!canPlay)
+        {
+            Debug.LogWarning("That's not your turn!");
+            return;
+        }
+
+        // card must belong to current player
+        var owner = card.GetComponent<CardOwner>();
+        if (owner == null || owner.ownerPlayerId != currentPlayer)
+        {
+            Debug.LogWarning($"You can only play your own cards. It is Player {currentPlayer + 1}'s turn!");
+            return;
+        }
+
+        // new version, for test reson commented out 05.08.
+        /*if (!canPlay)
         {
             Debug.LogWarning($"It's not Player {currentPlayer + 1}'s turn! You cannot play right now.");
            
@@ -119,7 +162,7 @@ public class GameManager : MonoBehaviour
         else
         {
             player2Cards.Remove(card);
-        }
+        }*/
 
         // new part in the script 06.24.
 
@@ -130,18 +173,27 @@ public class GameManager : MonoBehaviour
         playedCards.Add(new Card(cardUI.suit, cardUI.value, false));
         // new part end
 
-        // disable actions until the next turn starts
-        canPlay = false;
+        // disable actions until the next turn starts, modified 05.08. belong to the previous version
+        //canPlay = false;
 
         card.transform.SetParent(middleArea, false);
 
-        // this is a new code 07.15.
-        string playerName = currentPlayer == 0 ? "Player 1" : "Player 2";
+        // this is a new code 07.15./ modified 05.08.
+        /*string playerName = currentPlayer == 0 ? "Player 1" : "Player 2";
         cardPlayedInfoText.text = $"{playerName} placed a card in the middle.";
-        cardPlayedInfoText.color = currentPlayer == 0 ? Color.blue : Color.red;
-        // new code ends hre 07.15.
+        cardPlayedInfoText.color = currentPlayer == 0 ? Color.blue : Color.red;*/
+
+        // new version 05.08.
+        string playerName = owner.ownerPlayerId == 0 ? "Player 1" : "Player 2";
+        Color textColor = owner.ownerPlayerId == 0 ? Color.green : Color.red;
+        cardPlayedInfoText.text = $"{playerName} placed the card in the middle.";
+        cardPlayedInfoText.color = textColor;
+
+        canPlay = false;
+
+        // new code ends here 07.15.
         card.transform.SetAsLastSibling(); // Ensures top visual layer, new version 06.24.
-        card.GetComponent<RectTransform>().anchoredPosition = Vector2.zero; // Optional: center it, new code 06.24
+        card.GetComponent<RectTransform>().anchoredPosition = Vector2.zero; // new code 06.24
 
         // old 06.24. midified
         //card.transform.SetSiblingIndex(middleArea.childCount - 1); // ensure that the card appears on the top
@@ -149,24 +201,9 @@ public class GameManager : MonoBehaviour
 
         // new set up 06.24, for the fade-in effect
         CanvasGroup cg = card.AddComponent<CanvasGroup>();
-        //cg.alpha = 0f;
-        //LeanTween.alphaCanvas(cg, 1f, 0.5f);
-
-        //old
-        //card.transform.SetAsLastSibling();
+       
 
         lastPlacedCard = card; // track last played card
-
-        // old version
-        /*card.transform.SetParent(middleArea, false);
-        RectTransform cardRect = card.GetComponent<RectTransform>();
-        cardRect.anchoredPosition = middleArea.anchoredPosition;*/
-
-
-        //CardUI cardUI = card.GetComponent<CardUI>(); // this belongs to the old version, midified 06.24.
-        //playedCards.Add(new Card(cardUI.suit, cardUI.value, false)); // belongs to the old version, modified 06.24.
-        
-        
 
         StartCoroutine(NextTurn());
     }
@@ -256,43 +293,6 @@ public class GameManager : MonoBehaviour
     }
 
 
-    /*IEnumerator DetermineWinner()
-    {
-        yield return new WaitForSeconds(1f);
-
-        Transform winner = GetWinningPlayer();
-        MoveCardsToWinner(winner);
-    }
-    void MoveCardsToWinner(Transform winner)
-    {
-        int pointsGained = 0;
-
-        foreach (Transform card in middleArea)
-        {
-            if (card.name.Contains("Ace") || card.name.Contains("10"))
-            {
-                pointsGained += 10;
-            }
-
-            card.SetParent(winner == player1Area ? player1WinPile : player2WinPile);
-            card.gameObject.SetActive(false);
-        }
-
-        playerScores[winner] += pointsGained;
-        Debug.Log($"{winner.name} gained {pointsGained} points! Total score: {playerScores[winner]}");
-
-        StartCoroutine(NextTurn());
-    }
-
-    Transform GetWinningPlayer()
-    {
-        GameObject bestCard = middleArea.GetChild(0).gameObject;
-        Transform winner = bestCard.transform.parent;
-
-        Debug.Log($"{winner.name} wins this round!");
-
-        return winner;
-    }*/
 
     IEnumerator NextTurn()
     {
@@ -338,7 +338,7 @@ public class GameManager : MonoBehaviour
 
     Sprite GetCardSprite(Card card)
     {
-        //new
+        
         foreach (Sprite sprite in cardSprites)
         {
             if (sprite.name.Equals($"{card.suit}_{card.value}", System.StringComparison.OrdinalIgnoreCase))
@@ -349,16 +349,6 @@ public class GameManager : MonoBehaviour
 
         Debug.LogError($"No matching sprite found for {card.suit} {card.value}");
         return null; // Return null or a default placeholder sprite
-        //old
-        /*foreach (Sprite sprite in cardSprites)
-        {
-            if (sprite.name.Contains(card.suit) && sprite.name.Contains(card.value))
-            {
-                return sprite; // found the matching sprite
-            }
-        }
-
-        //Debug.LogError($"No matching sprite found for {card.suit} {card.value}");
-        return cardSprites[Random.Range(0, cardSprites.Length)];*/
+        
     }
 }
