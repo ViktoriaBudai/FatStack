@@ -7,7 +7,6 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
     // new
     [SerializeField] private Vector2 handSize = new Vector2(120f, 180f);
     [SerializeField] private Vector2 playedSizeMiddleArea = new Vector2(120f, 180f);
-    [SerializeField] private Vector2 handtest = new(120f, 180f);
 
     private Vector3 originalPosition;
     private Transform originalParent;
@@ -56,7 +55,7 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         // new 
         if (originalParent == GameManager.Instance.middleArea)
         {
-            rectTransform.sizeDelta = this.handtest;
+            rectTransform.sizeDelta = this.handSize;
             rectTransform.localScale = Vector3.one;
         }
     }
@@ -113,7 +112,6 @@ public class CardDrag : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
         rt.pivot = new Vector2(0.5f, 0.5f);
         rt.anchoredPosition = Vector2.zero;
         rt.localScale = Vector3.one; // keeps the card from shrinking
-        //rt.sizeDelta = new Vector2(240f, 560f); // lock to same size as in hand, for some reson I need bigger scale for the played cards, so I made this manually
         rt.sizeDelta = playedSizeMiddleArea;
     }
 
