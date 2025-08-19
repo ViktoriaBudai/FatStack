@@ -9,7 +9,6 @@ public class Card
     public int points; // 10 ponts for Ace and Ten
     public int strength;
     
-    
     public Card(string suit, string value, bool isQueen)
     {
         this.suit = suit;
@@ -17,8 +16,14 @@ public class Card
         this.isQueen = isQueen;
         this.points = GetCardPoints();
     }
+    
+    public bool IsZsir() => value == "ace" || value == "10";
+    public bool IsTrump() => value == "7";
+    public bool Equals(Card other) => suit == other.suit && value == other.value;
+    public override bool Equals(object obj) => obj is Card c && Equals(c);
+    public override int GetHashCode() => suit.GetHashCode() ^ value.GetHashCode();
 
-    private int GetCardPoints() 
+    private int GetCardPoints()
     {
         if (value == "ace" || value == "10") return 10;
         return 0;
@@ -32,7 +37,7 @@ public class Card
             case "ace": return 11;
             case "10": return 10;
             case "over": return 4;
-            case "under": return 2;
+            case "under": return 3;
             case "9": return 0;
             case "8": return 0;
             case "7": return 1; // low but not nothing

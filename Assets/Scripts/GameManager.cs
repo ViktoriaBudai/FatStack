@@ -9,6 +9,9 @@ public class GameManager : MonoBehaviour
 {
     // Singleton
     public static GameManager Instance;
+    public readonly string[] suits = { "acorn", "heart", "leaf", "bell" };
+    public readonly string[] values = { "Ace", "10", "queen", "over", "under", "9", "8", "7" };
+
 
     public List<Card> deck = new List<Card>(); // deck of cards
     public Transform player1Area; // UI area for player 1
@@ -25,8 +28,9 @@ public class GameManager : MonoBehaviour
 
     private GameObject lastPlacedCard;
     private int currentPlayer = 0; // player1[0], player2[1]
-    private List<Card> playedCards = new List<Card>(); // stores played cards
-    private List<GameObject> middleCards = new List<GameObject>(); // what's visible in the middle area
+    private List<PlayedCard> playedCards = new List<PlayedCard>(); // stores played cards
+    private List<GameObject> middleCardObjects = new List<GameObject>(); // what's visible in the middle area
+
     public List<GameObject> player1Cards = new List<GameObject>(); // Cards in Player 1 area
     public List<GameObject> player2Cards = new List<GameObject>(); // Cards in Player 2 area
 
@@ -38,12 +42,10 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI cardPlayedInfoText;
     [SerializeField] private MiddlePileRevealer middleRevealer; // new 08-08
 
-    // new 08.06
-    //new 08-07 11:35, commented out the next line
-    //private bool[] hasLeftRound;
-
-    // new modified now 08.06.
     public int CurrentPlayerIndex => currentPlayer;
+    private int trickStartIndex = 0; // to track where each trick starts, it needs to update this when a trick finishes
+
+    public Button passButton;
 
 
     void Awake()
@@ -55,14 +57,11 @@ public class GameManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
-            return; // new 08.06. 15:25
+            return; 
         }
-        
-        //hasLeftRound = new bool[2] { false, false }; // commented out 08-07 11:35
         
     }
 
-    // new code 05.08
 
     private IEnumerator Start()
     {
@@ -76,7 +75,6 @@ public class GameManager : MonoBehaviour
         currentPlayer = Random.Range(0, 2); // 0 or 1
         canPlay = true;
 
-        // new 08-07
         SetupTurn();
 
         // update UI, players know who goes first
@@ -90,28 +88,7 @@ public class GameManager : MonoBehaviour
 
     }
 
-    // new 08.06. / called by LeaveManager when a player click leave / commented out 08-07 11:35
-    /*public void OnPlayerLeaveRound(int playerIndex)
-    {
-        if (playerIndex < 0 || playerIndex > 1) return;
-
-        if (hasLeftRound[playerIndex])
-        {
-            Debug.LogWarning($"Player {playerIndex + 1} already left this round.");
-            return;
-        }
-
-        hasLeftRound[playerIndex] = true;
-        Debug.Log($"Player {playerIndex + 1} has left the round.");
-
-        // Disable that player�s card buttons
-        DisablePlayerCards(playerIndex);
-
-        // Advance to next active turn
-        StartCoroutine(NextTurn());
-    }*/
-    // replace the above code with this 08-07 11:35
-    // new
+    
     // Called by your "Skip Turn" UI button
     public void OnSkipTurnButton()
     {
@@ -126,23 +103,7 @@ public class GameManager : MonoBehaviour
   
     public void SetPlayerCardsInteractable(int playerIndex, bool interactable)
     {
-        // old 08-07
-        /*var list = GetCardList(playerIndex);
-        foreach (var card in list)
-        {
-            // ensure CanvasGroup to block raycasts
-            var cg = card.GetComponent<CanvasGroup>();
-            if (cg == null)
-                cg = card.AddComponent<CanvasGroup>();
-
-            cg.blocksRaycasts = interactable;
-
-            // disable/enable drag script
-            var drag = card.GetComponent<CardDrag>();
-            if (drag != null)
-                drag.enabled = interactable;
-        }*/
-        // new 08-07
+        
         var list = (playerIndex == 0) ? player1Cards : player2Cards;
         foreach (var card in list)
         {
@@ -167,23 +128,13 @@ public class GameManager : MonoBehaviour
         SetPlayerCardsInteractable(playerIndex, true);
     }
 
-    // new code 08-08 
     private void RefreshMiddleUI()
     {
         if (middleRevealer != null)
-            middleRevealer.SetMiddleCards(middleCards);
+            middleRevealer.SetMiddleCards(middleCardObjects);
     }
 
-    // old
-    /*private void SetupTurn()
-    {
-        for (int i = 0; i < 2; i++)
-        {
-            var ok = (i == currentPlayer && canPlay);
-            SetPlayerCardsInteractable(i, ok);
-        }
-    }*/
-    // new 08-07
+    
     private void SetupTurn()
     {
         // Enable only the active player's cards
@@ -192,9 +143,7 @@ public class GameManager : MonoBehaviour
     }
 
 
-    // new ends here 08.06 nnnnnn
-
-    // new 08.06. I added the private word infront of the function
+ 
     private IEnumerator NextTurn()
     {
         // new 08-07 11:35
@@ -211,21 +160,17 @@ public class GameManager : MonoBehaviour
         cardPlayedInfoText.color = color;
         Debug.Log($"{name} now has the turn.");
         
-
     }
 
    
 
-    void InitializeDeck()
+    void InitializeDeck()   
     {
-        string[] suits = { "acorn", "heart", "leaf", "bell" };
-        string[] values = { "Ace", "10", "queen", "over", "under", "9", "8", "7" };
-
         foreach (string suit in suits)
         {
             foreach (string value in values)
             {
-                deck.Add (new Card(suit, value, false));
+                deck.Add(new Card(suit, value, false));
             }
         }
     }
@@ -255,8 +200,6 @@ public class GameManager : MonoBehaviour
 
     public void PlayCard(GameObject card)
     {
-        // new version modifyed 05.08.
-        // must be your turn
         if (!canPlay)
         {
             Debug.LogWarning("That's not your turn!");
@@ -271,73 +214,368 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // new version, for test reson commented out 05.08.
-        /*if (!canPlay)
-        {
-            Debug.LogWarning($"It's not Player {currentPlayer + 1}'s turn! You cannot play right now.");
-           
-        }
-        // ensure that only the current player can place a card
-        if (card.transform.parent != GetCurrentPlayerArea())
-        {
-            Debug.LogWarning($"It's Player {currentPlayer + 1}'s turn! You cannot play right now.");
-            
-        }
-
-        // this is a test, if it is not working remove this
-        // **Remove the card from the player's list**
-        if (currentPlayer == 0)
+        // when cards are played remove it from players hand
+        if (owner.ownerPlayerId == 0)
         {
             player1Cards.Remove(card);
         }
         else
         {
             player2Cards.Remove(card);
-        }*/
+        }
 
-
-        // Add to visual middle list
-        middleCards.Add(card);
-        // Add to data history list
+        // add to visual middle list
+        middleCardObjects.Add(card);
+        // add to data history list
         CardUI cardUI = card.GetComponent<CardUI>();
-        playedCards.Add(new Card(cardUI.suit, cardUI.value, false));
-        // new part end
+        playedCards.Add(new PlayedCard(new Card(cardUI.suit, cardUI.value, false), currentPlayer));
 
         card.transform.SetParent(middleArea, false);
 
-
-        // new version 05.08.
         string playerName = owner.ownerPlayerId == 0 ? "Player 1" : "Player 2";
         Color textColor = owner.ownerPlayerId == 0 ? Color.green : Color.red;
         cardPlayedInfoText.text = $"{playerName} placed the card in the middle.";
         cardPlayedInfoText.color = textColor;
 
-        canPlay = false;
-        // new put here 08-07 11:15
-        SetupTurn();
-        // ends here
+        card.transform.SetAsLastSibling(); // Ensures top visual layer
+        card.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
 
-        // new code ends here 07.15.
-        card.transform.SetAsLastSibling(); // Ensures top visual layer, new version 06.24.
-        card.GetComponent<RectTransform>().anchoredPosition = Vector2.zero; // new code 06.24
-
-
-        // new set up 06.24, for the fade-in effect
+        // new set up for the fade-in effect
         CanvasGroup cg = card.AddComponent<CanvasGroup>();
-       
 
         lastPlacedCard = card; // track last played card
 
-        // notify the UI
+        
+        if (playedCards.Count % 2 == 0)
+        {
+            // even number in middle, just received the cover card (or second card of trick)
+            int leaderIndex = playedCards[trickStartIndex].player;
+            string leadValue = playedCards[trickStartIndex].card.value;
+
+            // the card just played (cover)
+            string coverValue = playedCards[playedCards.Count - 1].card.value;
+
+            // if cover value didn't match lead and isn't a 7, it was a free discard -> leader wins now
+            if (!(coverValue == leadValue || coverValue == "7"))
+            {
+                ResolveTrick(leaderIndex);
+                return;
+            }
+
+            int moves = GetPlayableCardsForNextPlayer(leaderIndex, true);
+
+            if (moves == 0)
+            {
+                int winner = DetermineRoundWinner();
+                ResolveTrick(winner);
+                return;
+            }
+            currentPlayer = leaderIndex;
+            return; // wait for leader’s play or pass
+        }
+        else
+        {
+            int nextIndex = (currentPlayer + 1) % 2;
+            GetPlayableCardsForNextPlayer(nextIndex, false);
+            currentPlayer = nextIndex;
+            return; // wait for cover
+        }
+        // Check if both players have played this trick
+        /*if (playedCards.Count % 2 == 0)
+        {
+            int available = GetPlayableCardsForNextPlayer();
+
+            if (available > 0)
+            {
+                // Show the pass button to the next player
+                ShowPassButton();
+                NextTurn();
+                // Do not advance turn automatically—wait for player action
+            }
+            else
+            {
+                // No pass option: resolve trick
+                int winner = DetermineRoundWinner();
+                ResolveTrick(winner);
+                Debug.Log("Round winner is " + (winner == 0 ? "Player 1" : "Player 2"));
+
+                // Update captured cards UI
+                CapturedCards();
+
+                // Set next player and advance turn
+                currentPlayer = winner;
+                RefreshMiddleUI();
+                StartCoroutine(NextTurn());
+            }
+        }
+        else
+        {
+            // If first card of trick, just advance to next player
+            RefreshMiddleUI();
+            StartCoroutine(NextTurn());
+        }*/
+    }
+
+
+    private int GetPlayableCardsForNextPlayer(int playerIndex, bool allowPassIfHasMoves)
+    {
+        List<GameObject> hand = (playerIndex == 0) ? player1Cards : player2Cards;
+
+        if (playedCards.Count <= trickStartIndex || playedCards[trickStartIndex].card == null)
+        {
+            Debug.LogWarning("Current trick is empty or improperly set.");
+            return 0;
+        }
+
+        string leadValue = playedCards[trickStartIndex].card.value;
+        int availableCards = 0;
+
+        foreach (GameObject cardObj in hand)
+        {
+            if (cardObj == null) continue;
+
+            var cardView = cardObj.GetComponent<CardView>();
+            if (cardView?.card == null) continue;
+
+            bool legalMove = cardView.card.value == leadValue || cardView.card.value == "7";
+
+            var cg = cardObj.GetComponent<CanvasGroup>() ?? cardObj.AddComponent<CanvasGroup>();
+            cg.blocksRaycasts = legalMove;
+
+            var drag = cardObj.GetComponent<CardDrag>();
+            if (drag != null) drag.enabled = legalMove;
+
+            if (legalMove) availableCards++;
+        }
+
+        if (availableCards > 0)
+        {
+            // only legal plays enabled
+            EnableHandInteraction(hand, true);
+            if (allowPassIfHasMoves) ShowPassButton();
+        }
+        else
+        {
+            // there is no legal move
+            if (!allowPassIfHasMoves)
+            {
+                // Cover turn -> allow any card as a free discard
+                EnableHandInteraction(hand, true);
+                cardPlayedInfoText.text = "No matching card. Discard any card; leader takes the trick.";
+            }
+            else
+            {
+                // Leader extend turn -> nothing to extend with; caller will resolve
+                EnableHandInteraction(hand, false);
+            }
+        }
+
+        return availableCards;
+        // old
+        /*foreach (GameObject cardObj in nextPlayerCards)
+        {
+            if (cardObj == null) continue;
+
+            CardView cardView = cardObj.GetComponent<CardView>();
+            if (cardView?.card == null) continue; // safe null check
+
+            Card card = cardView.card;
+
+            // use the card's value
+            bool legalMove = card.value == leadValue || card.value == "7";
+
+            // UI/interaction setup
+            var cg = cardObj.GetComponent<CanvasGroup>() ?? cardObj.AddComponent<CanvasGroup>();
+            var drag = cardObj.GetComponent<CardDrag>();
+
+            if (drag != null) drag.enabled = legalMove;
+            cg.blocksRaycasts = legalMove;
+
+            if (legalMove)
+            {
+                availableCards++;
+                // maybe highlight the card visually
+            }
+        }*/
+
+
+        // Determine whose turn is next and which hand to check
+        // new 08-10, I needed to create a new script becase the Card.cs was not inherit from MonoBehavious, so it can't be attached to a Gameobject
+        /*int nextPlayerIndex = (currentPlayer + 1) % 2;
+        List<GameObject> nextPlayerCards; 
+        
+        //List<Card> nextPlayerCards; // CS write this, try something else
+        if (nextPlayerIndex == 0) nextPlayerCards = player1Cards;
+        else nextPlayerCards = player2Cards; // it was  else(((currentPlayer + 1) % 2) == 1) nextPlayerCards = player2Cards;
+       
+
+        var leadValue = playedCards[0].card.value; 
+        // for test reason
+        if (playedCards.Count > 0 && playedCards[0] != null && playedCards[0].card != null)
+        {
+            leadValue = playedCards[0].card.value;
+        }
+        else
+        {
+            Debug.LogWarning("Played cards list is empty or improperly initialized.");
+            return 0;
+        }
+
+        int availableCards = 0;
+         
+        foreach (GameObject cardObj in nextPlayerCards)
+        {   // it was card in nextPlayerCards
+            // new I put here 08-10
+            // for test reason the next line
+            if (cardObj == null) continue;
+            CardView cardView = cardObj.GetComponent<CardView>();
+
+            if (cardView == null || cardView.card == null) continue; // I put this here 08.10 22:28
+            Card card = cardView.card; // new line 08-12
+            if (card.value == leadValue || card.IsTrump())
+            {
+                // make it available to be played
+                availableCards++;
+            }
+            else
+            {
+                // disable the card, since it is not playable
+            }
+        }
+        return availableCards;*/
+    }
+
+    // here
+
+
+    private void ResolveTrick(int winner)
+    {
+        // move middle cards to winner's pile
+        Transform pile = (winner == 0) ? player1WinPile : player2WinPile;
+        foreach (var obj in middleCardObjects)
+        {
+            if (obj == null) continue;
+            LeanTween.move(obj, pile.position, 0.5f).setOnComplete(() => obj.transform.SetParent(pile, false));
+        }
+
+        // reset UI and trick state
+        middleCardObjects.Clear();
         RefreshMiddleUI();
 
-        StartCoroutine(NextTurn());
+        // start refill sequence and continue the game
+        StartCoroutine(RefillSequence(winner));
+
+    }
+
+
+    // return winner Player number 
+    public int DetermineRoundWinner()
+    {
+        if (playedCards.Count == 0) throw new System.InvalidOperationException("No plays");
+
+        var leadValue = playedCards[0].card.value;
+        for (int i = playedCards.Count - 1; i >= 0; i--)
+            if (playedCards[i].card.value == leadValue || playedCards[i].card.IsTrump()) return playedCards[i].player;
+
+        return playedCards[0].player;
+        // new
+        /*if (playedCards.Count <= trickStartIndex) 
+        throw new System.InvalidOperationException("No plays in current trick");
+
+        string leadValue = playedCards[trickStartIndex].card.value;
+
+        for (int i = playedCards.Count - 1; i >= trickStartIndex; i--)
+        {
+            var pc = playedCards[i];
+            if (pc.card.value == leadValue || pc.card.IsTrump())
+                return pc.player;
+        }
+
+        return playedCards[trickStartIndex].player;*/
+    }
+
+    //new 08-17
+    private void EnableHandInteraction(List<GameObject> cards, bool enable)
+    {
+        foreach (var cardObj in cards)
+        {
+            var cg = cardObj.GetComponent<CanvasGroup>();
+            if (cg != null)
+                cg.blocksRaycasts = enable;
+
+            var drag = cardObj.GetComponent<CardDrag>();
+            if (drag != null)
+                drag.enabled = enable;
+        }
     }
     
 
+    private void ShowPassButton()
+    {
+        passButton.gameObject.SetActive(true);
+        passButton.onClick.RemoveAllListeners();
+        passButton.onClick.AddListener(() => OnPassPressed());
+
+        int leaderIndex = playedCards[trickStartIndex].player;
+        string leadValue = playedCards[trickStartIndex].card.value;
+
+        // Disable all cards
+        EnableHandInteraction(player1Cards, false);
+        EnableHandInteraction(player2Cards, false);
+
+        // enable only valid extension cards for leader
+        var leaderHand = (leaderIndex == 0) ? player1Cards : player2Cards;
+        foreach (var cardObj in leaderHand)
+        {
+            if (cardObj == null) continue;
+            var view = cardObj.GetComponent<CardView>();
+            if (view?.card == null) continue;
+
+            bool legal = view.card.value == leadValue || view.card.value == "7";
+            var cg = cardObj.GetComponent<CanvasGroup>() ?? cardObj.AddComponent<CanvasGroup>();
+            cg.blocksRaycasts = legal;
+
+            var drag = cardObj.GetComponent<CardDrag>();
+            if (drag != null) drag.enabled = legal;
+
+            // visual outline
+            var outline = cardObj.GetComponent<Outline>() ?? cardObj.AddComponent<Outline>();
+            outline.effectColor = legal ? Color.yellow : Color.clear;
+            outline.effectDistance = new Vector2(5f, 5f);
+        }
+
+        string leaderName = leaderIndex == 0 ? "Player 1" : "Player 2";
+        Color leaderColor = leaderIndex == 0 ? Color.green : Color.red;
+        cardPlayedInfoText.text = $"{leaderName}, extend with a 7 or same value, or press Pass.";
+        cardPlayedInfoText.color = leaderColor;
+        
+    }
+
+
+    // card outline, visual
+    private void RemoveAllOutlines()
+    {
+        foreach (var cardObj in player1Cards.Concat(player2Cards))
+        {
+            if (cardObj == null) continue;
+            var outline = cardObj.GetComponent<Outline>();
+            if (outline != null) Destroy(outline);
+        }
+    }
+
+    private void OnPassPressed()
+    {
+        passButton.gameObject.SetActive(false);
+        // new 08-18
+        RemoveAllOutlines();
+        int winner = DetermineRoundWinner();
+        ResolveTrick(winner);
+    }
+
+
     public void DrawNextCard()
     {
-        //new
+        
         if (!canPlay)
         {
             Debug.LogWarning("It's not your turn! Wait for the next move.");
@@ -350,7 +588,7 @@ public class GameManager : MonoBehaviour
             return;
         }
         Debug.Log("Player is allowed to draw a card!");
-        // new
+
         Transform playerArea = GetCurrentPlayerArea();
         DrawCard(playerArea);
 
@@ -366,7 +604,7 @@ public class GameManager : MonoBehaviour
         }
 
         GameObject cardObj = InstantiateCard(card, deckTransform);
-        deck.Remove(card);
+        
 
         if (cardObj == null)
         {
@@ -374,7 +612,7 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        //new 08.07
+        
         // assign player ownership to the card
         CardOwner owner = cardObj.GetComponent<CardOwner>();
         if (owner != null)
@@ -382,8 +620,8 @@ public class GameManager : MonoBehaviour
             owner.ownerPlayerId = (playerArea == player1Area) ? 0 : 1;
         }
 
-        // new part if it is not working, strat from here to debug, something is not okay with that still
-        // Assign the card to the correct player's list
+        
+        // assign the card to the correct player's list
         if (playerArea == player1Area)
         {
             player1Cards.Add(cardObj);
@@ -423,7 +661,46 @@ public class GameManager : MonoBehaviour
         CardUI cardUI = newCard.GetComponent<CardUI>();
         cardUI.SetCard(GetCardSprite(card), card.suit, card.value);
 
+        // bind Card into the prefab's CardView
+        // data setup
+        CardView cardView = newCard.GetComponent<CardView>();
+        if (cardView != null)
+            cardView.Bind(card);
+
         return newCard;
+    }
+
+    
+    // checks how many cards a player needs to get back to 4 nad draws that number of cards from the deck
+    private IEnumerator RefillHand(Transform playerArea, List<GameObject> playerCards)
+    {
+        while (playerCards.Count < 4 && deck.Count > 0)
+        {
+            DrawCard(playerArea);
+            yield return new WaitForSeconds(0.5f);
+        }
+    }
+
+    // refill sequence coroutine
+    // refill players hands with the missing number of cards AND continue the Game
+    private IEnumerator RefillSequence(int winner)
+    {
+        // Winner draws first
+        if (winner == 0)
+        {
+            yield return StartCoroutine(RefillHand(player1Area, player1Cards));
+            yield return StartCoroutine(RefillHand(player2Area, player2Cards));
+        }
+        else
+        {
+            yield return StartCoroutine(RefillHand(player2Area, player2Cards));
+            yield return StartCoroutine(RefillHand(player1Area, player1Cards));
+        }
+
+        // Continue the game
+        currentPlayer = winner;
+        trickStartIndex = playedCards.Count;
+        SetupTurn();
     }
 
     public Transform GetCurrentPlayerArea()

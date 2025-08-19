@@ -18,6 +18,7 @@ GameObject:
   - component: {fileID: 3570419666999876149}
   - component: {fileID: 6839771645087934772}
   - component: {fileID: 319694706298360143}
+  - component: {fileID: -3396429301188806637}
   m_Layer: 5
   m_Name: CardImage
   m_TagString: Untagged
@@ -222,6 +223,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9eba37e63b5917c4e8cb33ef22c62eee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  handSize: {x: 120, y: 180}
+  playedSizeMiddleArea: {x: 120, y: 180}
 --- !u!225 &6839771645087934772
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -248,3 +251,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ownerPlayerId: 0
   ownerLabel: {fileID: 0}
+--- !u!114 &-3396429301188806637
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5198034725903337433}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 98fe56169173f9d40a5e8fee46e3b49c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
