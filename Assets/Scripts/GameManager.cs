@@ -255,7 +255,7 @@ public class GameManager : MonoBehaviour
             // the card just played (cover)
             string coverValue = playedCards[playedCards.Count - 1].card.value;
 
-            // if cover value didn't match lead and isn't a 7, it was a free discard -> leader wins now
+            // if cover value didn't match lead and isn't a 7, it was a free discard, so leader wins now
             if (!(coverValue == leadValue || coverValue == "7"))
             {
                 ResolveTrick(leaderIndex);
@@ -371,34 +371,6 @@ public class GameManager : MonoBehaviour
         }
 
         return availableCards;
-        // old
-        /*foreach (GameObject cardObj in nextPlayerCards)
-        {
-            if (cardObj == null) continue;
-
-            CardView cardView = cardObj.GetComponent<CardView>();
-            if (cardView?.card == null) continue; // safe null check
-
-            Card card = cardView.card;
-
-            // use the card's value
-            bool legalMove = card.value == leadValue || card.value == "7";
-
-            // UI/interaction setup
-            var cg = cardObj.GetComponent<CanvasGroup>() ?? cardObj.AddComponent<CanvasGroup>();
-            var drag = cardObj.GetComponent<CardDrag>();
-
-            if (drag != null) drag.enabled = legalMove;
-            cg.blocksRaycasts = legalMove;
-
-            if (legalMove)
-            {
-                availableCards++;
-                // maybe highlight the card visually
-            }
-        }*/
-
-
         // Determine whose turn is next and which hand to check
         // new 08-10, I needed to create a new script becase the Card.cs was not inherit from MonoBehavious, so it can't be attached to a Gameobject
         /*int nextPlayerIndex = (currentPlayer + 1) % 2;
@@ -445,7 +417,6 @@ public class GameManager : MonoBehaviour
         return availableCards;*/
     }
 
-    // here
 
 
     private void ResolveTrick(int winner)
@@ -463,7 +434,7 @@ public class GameManager : MonoBehaviour
         RefreshMiddleUI();
 
         // start refill sequence and continue the game
-        StartCoroutine(RefillSequence(winner));
+        RefillSequence(winner);
 
     }
 
@@ -471,16 +442,17 @@ public class GameManager : MonoBehaviour
     // return winner Player number 
     public int DetermineRoundWinner()
     {
-        if (playedCards.Count == 0) throw new System.InvalidOperationException("No plays");
+        /*if (playedCards.Count == 0) throw new System.InvalidOperationException("No plays");
 
         var leadValue = playedCards[0].card.value;
         for (int i = playedCards.Count - 1; i >= 0; i--)
             if (playedCards[i].card.value == leadValue || playedCards[i].card.IsTrump()) return playedCards[i].player;
 
-        return playedCards[0].player;
-        // new
-        /*if (playedCards.Count <= trickStartIndex) 
-        throw new System.InvalidOperationException("No plays in current trick");
+        return playedCards[0].player;*/
+        
+        // new, this is working correctly
+        if (playedCards.Count <= trickStartIndex)
+            throw new System.InvalidOperationException("No plays in current trick");
 
         string leadValue = playedCards[trickStartIndex].card.value;
 
@@ -491,7 +463,7 @@ public class GameManager : MonoBehaviour
                 return pc.player;
         }
 
-        return playedCards[trickStartIndex].player;*/
+        return playedCards[trickStartIndex].player;
     }
 
     //new 08-17
@@ -566,7 +538,6 @@ public class GameManager : MonoBehaviour
     private void OnPassPressed()
     {
         passButton.gameObject.SetActive(false);
-        // new 08-18
         RemoveAllOutlines();
         int winner = DetermineRoundWinner();
         ResolveTrick(winner);
@@ -604,7 +575,6 @@ public class GameManager : MonoBehaviour
         }
 
         GameObject cardObj = InstantiateCard(card, deckTransform);
-        
 
         if (cardObj == null)
         {
@@ -612,7 +582,6 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        
         // assign player ownership to the card
         CardOwner owner = cardObj.GetComponent<CardOwner>();
         if (owner != null)
@@ -620,19 +589,16 @@ public class GameManager : MonoBehaviour
             owner.ownerPlayerId = (playerArea == player1Area) ? 0 : 1;
         }
 
-        
         // assign the card to the correct player's list
         if (playerArea == player1Area)
         {
             player1Cards.Add(cardObj);
         }
-            
         else
         {
             player2Cards.Add(cardObj);
         }
 
-        
         LeanTween.move(cardObj, playerArea.position, 1f)
             .setEase(LeanTweenType.easeOutQuad)
             .setOnComplete(() => cardObj.transform.SetParent(playerArea, false));
@@ -671,8 +637,8 @@ public class GameManager : MonoBehaviour
     }
 
     
-    // checks how many cards a player needs to get back to 4 nad draws that number of cards from the deck
-    private IEnumerator RefillHand(Transform playerArea, List<GameObject> playerCards)
+    // checks how many cards a player needs to get back to 4 and draws that number of cards from the deck
+    private IEnumerator RefillHand(Transform playerArea, Transform player2Area, List<GameObject> playerCards)
     {
         while (playerCards.Count < 4 && deck.Count > 0)
         {
@@ -683,19 +649,18 @@ public class GameManager : MonoBehaviour
 
     // refill sequence coroutine
     // refill players hands with the missing number of cards AND continue the Game
-    private IEnumerator RefillSequence(int winner)
+    private void RefillSequence(int winner)
     {
         // Winner draws first
-        if (winner == 0)
+
+        while (player1Cards.Count < 4 && player2Cards.Count < 4 && deck.Count > 0)
         {
-            yield return StartCoroutine(RefillHand(player1Area, player1Cards));
-            yield return StartCoroutine(RefillHand(player2Area, player2Cards));
+            DrawCard(player1Area);
+            DrawCard(player2Area);
+            new WaitForSeconds(0.5f);
         }
-        else
-        {
-            yield return StartCoroutine(RefillHand(player2Area, player2Cards));
-            yield return StartCoroutine(RefillHand(player1Area, player1Cards));
-        }
+
+
 
         // Continue the game
         currentPlayer = winner;
@@ -717,12 +682,12 @@ public class GameManager : MonoBehaviour
         {
             if (sprite.name.Equals($"{card.suit}_{card.value}", System.StringComparison.OrdinalIgnoreCase))
             {
-                return sprite; // Found the exact matching sprite
+                return sprite; // found the exact matching sprite
             }
         }
 
         Debug.LogError($"No matching sprite found for {card.suit} {card.value}");
-        return null; // Return null or a default placeholder sprite
+        return null; // return null or a default placeholder sprite
         
     }
 }
